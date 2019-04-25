@@ -33,7 +33,7 @@ namespace MovieRatings.Controllers
                     return NotFound();
                 }
 
-                return Ok(movies.OrderBy(x=>x.AverageRating).Take(5));
+                return Ok(movies.OrderByDescending(x=>x.AverageRating).Take(5));
             }
 
             catch (Exception ex)
