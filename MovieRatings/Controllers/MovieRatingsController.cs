@@ -96,28 +96,30 @@ namespace MovieRatings.Controllers
         [Route("UpdateRating")]
         public IActionResult UpdateRating([FromBody]UpdateModel model)
         {
-            if (ModelState.IsValid)
+
+            try
             {
-                try
+                if (ModelState.IsValid)
                 {
                     var status = _movieRatingsRepository.UpdateOrAddRating(model);
                     if (status)
                         return Ok();
                     else return BadRequest();
                 }
-                catch (Exception ex)
-                {
-                    if (ex.GetType().FullName ==
-                             "Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException")
-                    {
-                        return NotFound();
-                    }
 
-                    return BadRequest();
-                }
+                return BadRequest();
             }
+            catch (Exception ex)
+            {
+                if (ex.GetType().FullName ==
+                         "Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException")
+                {
+                    return NotFound();
+                }
 
-            return BadRequest();
+                return BadRequest();
+            }
+  
         }
     }
 }
