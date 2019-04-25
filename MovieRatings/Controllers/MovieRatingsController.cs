@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using MovieRatings.Models;
 using MovieRatings.Repository;
 
 namespace MovieRatings.Controllers
@@ -21,12 +22,37 @@ namespace MovieRatings.Controllers
 
         [Produces("application/json")]
         [HttpGet]
-        [Route("GetAll")]
-        public IActionResult Get()
+        [Route("GetTopFiveMovies")]
+        public IActionResult GetTopFive()
         {
             try
             {
                 var movies = _movieRatingsRepository.GetAll();
+                if (movies == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(movies.OrderBy(x=>x.AverageRating).Take(5));
+            }
+
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
+
+        }
+
+        [Produces("application/json")]
+        [HttpGet]
+        [Route("GetByFilter")]
+        public IActionResult GetAllItems(string title, int? releaseYear)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(title) && releaseYear == null) return BadRequest();
+
+                var movies = _movieRatingsRepository.GetMoviesByFilter(title, releaseYear);
                 if (movies == null)
                 {
                     return NotFound();
@@ -44,12 +70,14 @@ namespace MovieRatings.Controllers
 
         [Produces("application/json")]
         [HttpGet]
-        [Route("GetByFilter")]
-        public IActionResult GetAllItems(string title, int? releaseYear)
+        [Route("GetTopMoviesByUser")]
+        public IActionResult GetTopFiveMoviesByUser(long userId)
         {
             try
             {
-                var movies = _movieRatingsRepository.GetMoviesByFilter(title, releaseYear);
+                if (userId == 0) return BadRequest();
+                var movies = _movieRatingsRepository.GetTopMoviesByUser(userId);
+
                 if (movies == null)
                 {
                     return NotFound();
@@ -62,7 +90,34 @@ namespace MovieRatings.Controllers
             {
                 return BadRequest();
             }
+        }
 
+        [HttpPut]
+        [Route("UpdateRating")]
+        public IActionResult UpdateRating([FromBody]UpdateModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var status = _movieRatingsRepository.UpdateOrAddRating(model);
+                    if (status)
+                        return Ok();
+                    else return BadRequest();
+                }
+                catch (Exception ex)
+                {
+                    if (ex.GetType().FullName ==
+                             "Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException")
+                    {
+                        return NotFound();
+                    }
+
+                    return BadRequest();
+                }
+            }
+
+            return BadRequest();
         }
     }
 }

@@ -14,6 +14,7 @@ namespace MovieRatings
         public string Title { get; set; }
         public int RuntimeMinutes { get; set; }
         public int ReleaseYear { get; set; }
+        //public decimal AverageRating { get; set; }
 
         public ICollection<UserRatings> UserRatings { get; set; }
     }
